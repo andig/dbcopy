@@ -1,5 +1,6 @@
 {
 	"source": {
+		// source database connection
 		"driver": "pdo_mysql",
 		"host": "localhost",
 		"user": "travis",
@@ -7,6 +8,7 @@
 		"dbname": "volkszaehler"
 	},
 	"target": {
+		// target database connection
 		"driver": "pdo_sqlite",
 		"path": "sqlite.db3",		// path is only used if driver = pdo_sqlite
 		"host": "localhost",
@@ -15,8 +17,8 @@
 		// "dbname": "backup"
 	},
 	"tables": [
-		// TABLE DEFINITION
-		// ----------------
+		// table configuration (optional)
+		// ------------------------------
 		// table name
 		// 		tables will be processed in the order they are mentioned:
 		//		- foreign keys on target will be dropped
