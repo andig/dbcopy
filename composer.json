@@ -1,0 +1,20 @@
+{
+	"name": "andig/dbcopy",
+	"type": "project",
+	"homepage": "http://github.com/andig/dbcopy/",
+	"license": "MIT",
+	"support": {
+		"wiki": "http://github.com/andig/dbcopy/",
+		"email": "cpuidle@gmx.de"
+	},
+	"require": {
+		"doctrine/dbal": "2.4.*",
+		"symfony/console": "2.6.*@dev"
+	},
+	"bin": ["dbcopy.php"],
+	"autoload": {
+		"psr-0": {
+			"DatabaseCopy\\": "./"
+		}
+	}
+}
