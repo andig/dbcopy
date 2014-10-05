@@ -95,6 +95,17 @@ abstract class AbstractCommand extends Command {
 		$conn->executeQuery($sql);
 	}
 
+	/**
+	 * Get existing tables by name
+	 */
+	protected function getTables($sm) {
+		$tables = array_map(function($table) {
+			return $table->getname();
+		}, $sm->listTables());
+
+		return $tables;
+	}
+
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$this->output = $output;
 

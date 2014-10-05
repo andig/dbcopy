@@ -38,11 +38,7 @@ class BackupCommand extends AbstractCommand {
 	}
 
 	protected function validateTableExists($sm, $name) {
-		$tables = array_map(function($table) {
-			return $table->getname();
-		}, $sm->listTables());
-
-		if (!in_array($name, $tables))
+		if (!in_array($name, $this->getTables($sm)))
 			throw new \Exception('Table ' . $name . ' doesn\'t exist.' . "To create the schema run\n \n" .
 				"	doctrine.php orm:schema-tool:create --dump-sql");
 	}
@@ -170,7 +166,20 @@ class BackupCommand extends AbstractCommand {
 
 		$this->dropConstraints($tm, $this->getConfig('tables'));
 
-		foreach ($this->getConfig('tables') as $workItem) {
+		if (($tables = $this->getOptionalConfig('tables')) == null) {
+			echo("tables not configured - discovering from source schema\n");
+			$tables = array();
+
+			foreach ($this->getTables($sm) as $tableName) {
+				echo($tableName . " discovered\n");
+				$tables[] = array(
+					'name' => $tableName,
+					'mode' => self::MODE_COPY
+				);
+			}
+		}
+
+		foreach ($tables as $workItem) {
 			$name = $workItem['name'];
 			$mode = strtolower($workItem['mode']);
 
