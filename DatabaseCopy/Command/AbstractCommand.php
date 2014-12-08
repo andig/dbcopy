@@ -78,12 +78,18 @@ abstract class AbstractCommand extends Command {
 			$conn = \Doctrine\DBAL\DriverManager::getConnection($_config);
 			$sm = $conn->getSchemaManager();
 
-			$schemas = $sm->listDatabases();
-			$result = in_array($db, $schemas);
+			try {
+				$schemas = $sm->listDatabases();
 
-			if ($required &! $result)
-				throw new \Exception('Database schema ' . $db . ' doesn\'t exist.' . "To create the schema run\n \n" .
-					"	doctrine.php orm:schema-tool:create --dump-sql");
+				$result = in_array($db, $schemas);
+
+				if ($required &! $result)
+					throw new \Exception('Database schema ' . $db . ' doesn\'t exist.');
+			}
+			catch (\Doctrine\DBAL\DBALException $e) {
+				// platform->getListDatabasesSQL() may not exist on all platforms
+				$result = true;
+			}
 		}
 
 		return $result;
