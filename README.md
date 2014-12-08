@@ -33,8 +33,8 @@ The config file has the following structure:
 		// "dbname": "backup"
 	},
 	"tables": [
-		// table configuration
-		// ----------------
+		// table configuration (optional)
+		// ------------------------------
 		// table name
 		// 		tables will be processed in the order they are mentioned:
 		//		- foreign keys on target will be dropped
