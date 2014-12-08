@@ -12,6 +12,17 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 
+if (!function_exists('array_column')) {
+
+	/**
+	 * Simplified array_column polyfill
+	 */
+	function array_column($ary, $columnKey)
+	{
+	    return array_map(create_function('&$row', 'return $row["'.$columnKey.'"];'), $ary);
+	}
+}
+
 class CreateCommand extends AbstractCommand {
 
 	protected $indexes;	// names assets
@@ -59,7 +70,7 @@ class CreateCommand extends AbstractCommand {
 	protected function renameAssets($schema, $platform) {
 		$this->indexes = array();
 
-		echo("renaming assets for target platform: " . $platform . "\n");
+		echo("Renaming assets for target platform: " . $platform . "\n");
 
 		foreach ($schema->getTables() as $table) {
 			echo("table: " . $table->getName() . "\n");
@@ -96,6 +107,7 @@ class CreateCommand extends AbstractCommand {
 			$conn = \Doctrine\DBAL\DriverManager::getConnection($_config);
 			$tm = $conn->getSchemaManager();
 
+			echo("Creating database\n");
 			$tm->createDatabase($db);
 		}
 
@@ -107,8 +119,13 @@ class CreateCommand extends AbstractCommand {
 				$this->renameAssets($schema, $platform);
 			}
 
+			echo("Creating tables\n");
+
 			// sync configured tables only
 			if (($tables = $this->getOptionalConfig('tables'))) {
+				// extract target table names
+				$tables = array_column($tables, 'name');
+
 				foreach ($schema->getTables() as $table) {
 					if (!in_array($table->getName(), $tables)) {
 						$schema->dropTable($table->getName());
