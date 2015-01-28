@@ -19,12 +19,14 @@ class BackupCommand extends AbstractCommand {
 
 	const BATCH_SIZE = 1000;
 
+	protected $batch;			// batch size
 	protected $constraints;
 
 	protected function configure() {
 		$this->setName('backup')
 			->setDescription('Run backup')
 			->addOption('config', 'c', InputOption::VALUE_REQUIRED, 'Config file')
+	 		->addOption('batch', 'b', InputOption::VALUE_REQUIRED, 'Batch size')
 	 		->addArgument('tables', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, 'Table(s)');
 	}
 
@@ -104,8 +106,7 @@ class BackupCommand extends AbstractCommand {
 		echo($totalRows . " rows (" . (($keyColumn) ? 'partial copy' : 'overwrite') . ")\n");
 
 		// transfer sql
-		$sqlInsert = 'INSERT INTO ' . $this->tc->quoteIdentifier($table->getName()) . ' (' . $columns . ') ' .
-					 'VALUES (' . join(array_fill(0, sizeof($table->getColumns()), '?'), ',') . ')';
+		$sqlValues = '(' . join(array_fill(0, sizeof($table->getColumns()), '?'), ',') . ')';
 
 		$progress = new ProgressBar($this->output, $totalRows);
 		if ($totalRows < 1000)
@@ -130,24 +131,29 @@ class BackupCommand extends AbstractCommand {
 					$sql .= ' WHERE ' . $this->sc->quoteIdentifier($keyColumn) . ' > ?';
 
 				$sql .= ' ORDER BY ' . $this->sc->quoteIdentifier($keyColumn) .
-						' LIMIT ' . self::BATCH_SIZE;
+						' LIMIT ' . $this->batch;
 
 				$sqlParameters = array($maxKey);
 			}
 
 			$rows = $this->sc->fetchAll($sql, $sqlParameters);
 
-			// write target data
-			$this->tc->beginTransaction();
+			$sqlInsert =
+				'INSERT INTO ' . $this->tc->quoteIdentifier($table->getName()) . ' (' . $columns . ') ' .
+				'VALUES ' . join(array_fill(0, count($rows), $sqlValues), ',');
+
+		    $data = array();
 			foreach ($rows as $row) {
 				// remember max key
 				if ($keyColumn)
 					$maxKey = $row[$keyColumn];
 
-				$this->tc->executeQuery($sqlInsert, array_values($row));
-				$progress->advance();
+				$data = array_merge($data, array_values($row));
 			}
-			$this->tc->commit();
+
+			$this->tc->executeQuery($sqlInsert, $data);
+			$progress->advance(count($rows));
+
 		} while ($keyColumn && sizeof($rows));
 
 		$progress->finish();
@@ -156,6 +162,8 @@ class BackupCommand extends AbstractCommand {
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		parent::execute($input, $output);
+
+		$this->batch = $input->getOption('batch') || self::BATCH_SIZE;
 
 		// make sure schemas exists
 		$sm = $this->sc->getSchemaManager();
