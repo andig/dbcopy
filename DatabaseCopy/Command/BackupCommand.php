@@ -27,6 +27,7 @@ class BackupCommand extends AbstractCommand {
 			->setDescription('Run backup')
 			->addOption('config', 'c', InputOption::VALUE_REQUIRED, 'Config file')
 	 		->addOption('batch', 'b', InputOption::VALUE_REQUIRED, 'Batch size')
+	 		->addOption('keep-constraints', 'k', InputOption::VALUE_NONE, 'Keep constraints - avoid dropping foreign keys')
 	 		->addArgument('tables', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, 'Table(s)');
 	}
 
@@ -172,7 +173,9 @@ class BackupCommand extends AbstractCommand {
 		$tm = $this->tc->getSchemaManager();
 		$this->validateSchema($this->getConfig('target'));
 
-		$this->dropConstraints($tm, $this->getConfig('tables'));
+		if (!$input->getOption('keep-constraints')) {
+			$this->dropConstraints($tm, $this->getConfig('tables'));
+		}
 
 		if (($tables = $this->getOptionalConfig('tables')) == null) {
 			echo("tables not configured - discovering from source schema\n");
@@ -217,7 +220,9 @@ class BackupCommand extends AbstractCommand {
 			}
 		}
 
-		$this->addConstraints($tm);
+		if (!$input->getOption('keep-constraints')) {
+			$this->addConstraints($tm);
+		}
 	}
 }
 
