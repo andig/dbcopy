@@ -109,18 +109,11 @@ class BackupCommand extends AbstractCommand {
 		$sqlValues = '(' . join(array_fill(0, sizeof($table->getColumns()), '?'), ',') . ')';
 
 		$progress = new ProgressBar($this->output, $totalRows);
-		// if ($totalRows < 1000)
-		// 	$progress->setRedrawFrequency($totalRows / 4);
-		// elseif ($totalRows < 10000)
-		// 	$progress->setRedrawFrequency($totalRows / 10);
-		// else {
-		// 	$progress->setRedrawFrequency($totalRows / 20);
-		// 	$progress->setFormatDefinition('debug', ' [%bar%] %percent:3s%% %elapsed:8s%/%estimated:-8s% %current% rows');
-		// 	$progress->setFormat('debug');
-		// }
-		$progress->setRedrawFrequency($totalRows / 20);
 		$progress->setFormatDefinition('debug', ' [%bar%] %percent:3s%% %elapsed:8s%/%estimated:-8s% %current% rows');
 		$progress->setFormat('debug');
+		if ($totalRows > 0) {
+			$progress->setRedrawFrequency($totalRows / 20);
+		}
 
 		$progress->start();
 
@@ -130,8 +123,9 @@ class BackupCommand extends AbstractCommand {
 
 			// limit selection for PRIMARY KEY mode
 			if ($keyColumn) {
-				if (isset($maxKey))
+				if (isset($maxKey)) {
 					$sql .= ' WHERE ' . $this->sc->quoteIdentifier($keyColumn) . ' > ?';
+				}
 
 				$sql .= ' ORDER BY ' . $this->sc->quoteIdentifier($keyColumn) .
 						' LIMIT ' . $this->batch;
@@ -139,7 +133,7 @@ class BackupCommand extends AbstractCommand {
 				$sqlParameters = array($maxKey);
 			}
 
-			if (sizeof($rows = $this->sc->fetchAll($sql, $sqlParameters) == 0) {
+			if (sizeof($rows = $this->sc->fetchAll($sql, $sqlParameters)) == 0) {
 				// avoid div by zero in progress->advance
 				break;
 			}
