@@ -27,6 +27,10 @@ class DropCommand extends AbstractCommand {
 		if (($db = $this->getOptionalConfig('target.dbname')) !== null) {
 			$tm->dropDatabase($db);
 		}
+		elseif ($this->tc->getDatabasePlatform()->getName() == 'sqlite'
+			&& ($db = $this->getOptionalConfig('target.path')) !== null) {
+			unlink($db);
+		}
 		else {
 			throw new \Exception('Cannot drop undefined schema');
 		}

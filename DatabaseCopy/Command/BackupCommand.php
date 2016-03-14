@@ -81,6 +81,13 @@ class BackupCommand extends AbstractCommand {
 		$maxKey = null;
 
 		echo($table->getName() . ": copying ");
+		// count selection range
+		$sqlCount = 'SELECT COUNT(1) FROM (' . $this->sc->quoteIdentifier($table->getName()) . ')';
+		if ($keyColumn && isset($maxKey)) {
+			$sqlCount .= ' WHERE ' . $this->sc->quoteIdentifier($keyColumn) . ' > ?';
+		}
+		$totalRows = $this->sc->fetchColumn($sqlCount, $sqlParameters);
+		echo($totalRows . " rows (" . (($keyColumn) ? 'partial copy' : 'overwrite') . ")\n");
 
 		// set selection range
 		if ($keyColumn) {
@@ -91,32 +98,23 @@ class BackupCommand extends AbstractCommand {
 			if (isset($maxKey))
 				$sqlParameters[] = $maxKey;
 		}
-
-		// clear target table
-		if ($keyColumn == false) {
+		else {
+			// clear target table
 			$this->truncateTable($this->tc, $table);
 		}
-
-		// count selection range
-		$sqlCount = 'SELECT COUNT(1) FROM (' . $this->sc->quoteIdentifier($table->getName()) . ')';
-		if ($keyColumn && isset($maxKey)) {
-			$sqlCount .= ' WHERE ' . $this->sc->quoteIdentifier($keyColumn) . ' > ?';
-		}
-
-		$totalRows = $this->sc->fetchColumn($sqlCount, $sqlParameters);
-		echo($totalRows . " rows (" . (($keyColumn) ? 'partial copy' : 'overwrite') . ")\n");
-
-		// transfer sql
-		$sqlValues = '(' . join(array_fill(0, sizeof($table->getColumns()), '?'), ',') . ')';
 
 		$progress = new ProgressBar($this->output, $totalRows);
 		$progress->setFormatDefinition('debug', ' [%bar%] %percent:3s%% %elapsed:8s%/%estimated:-8s% %current% rows');
 		$progress->setFormat('debug');
-		if ($totalRows > 0) {
-			$progress->setRedrawFrequency($totalRows / 20);
-		}
+
+		$freq = (int)$totalRows / 20;
+		$progress->setRedrawFrequency(($freq > 10) ? $freq : 10);
 
 		$progress->start();
+
+		// transfer sql
+		$sqlValuePlaceholder = '(' . join(array_fill(0, sizeof($table->getColumns()), '?'), ',') . ')';
+		$loopOffsetIndex = 0;
 
 		do {
 			// get source data
@@ -126,12 +124,14 @@ class BackupCommand extends AbstractCommand {
 			if ($keyColumn) {
 				if (isset($maxKey)) {
 					$sql .= ' WHERE ' . $this->sc->quoteIdentifier($keyColumn) . ' > ?';
+					$sqlParameters = array($maxKey);
 				}
 
 				$sql .= ' ORDER BY ' . $this->sc->quoteIdentifier($keyColumn) .
 						' LIMIT ' . $this->batch;
-
-				$sqlParameters = array($maxKey);
+			}
+			else {
+				$sql .= ' LIMIT ' . $this->batch . ' OFFSET ' . ($this->batch * $loopOffsetIndex++);
 			}
 
 			if (sizeof($rows = $this->sc->fetchAll($sql, $sqlParameters)) == 0) {
@@ -139,23 +139,43 @@ class BackupCommand extends AbstractCommand {
 				break;
 			}
 
-			$sqlInsert =
-				'INSERT INTO ' . $this->tc->quoteIdentifier($table->getName()) . ' (' . $columns . ') ' .
-				'VALUES ' . join(array_fill(0, count($rows), $sqlValues), ',');
+			if ($this->tc->getDatabasePlatform()->getName() !== 'sqlite') {
+				$sqlInsert =
+					'INSERT INTO ' . $this->tc->quoteIdentifier($table->getName()) . ' (' . $columns . ') ' .
+					'VALUES ' . join(array_fill(0, count($rows), $sqlValuePlaceholder), ',');
 
-		    $data = array();
-			foreach ($rows as $row) {
-				// remember max key
-				if ($keyColumn)
-					$maxKey = $row[$keyColumn];
+			    $data = array();
+				foreach ($rows as $row) {
+					// remember max key
+					if ($keyColumn)
+						$maxKey = $row[$keyColumn];
 
-				$data = array_merge($data, array_values($row));
+					$data = array_merge($data, array_values($row));
+				}
+
+				$this->tc->executeUpdate($sqlInsert, $data);
+				$progress->advance(count($rows));
 			}
+			else {
+				// sqlite
+				$stmt = $this->tc->prepare(
+					'INSERT INTO ' . $this->tc->quoteIdentifier($table->getName()) . ' (' . $columns . ') ' .
+					'VALUES (' . join(array_fill(0, count($table->getColumns()), '?'), ',') . ')'
+				);
 
-			$this->tc->executeQuery($sqlInsert, $data);
-			$progress->advance(count($rows));
+				$this->tc->beginTransaction();
+				foreach ($rows as $row) {
+					// remember max key
+					if ($keyColumn)
+						$maxKey = $row[$keyColumn];
 
-		} while ($keyColumn && sizeof($rows));
+					$stmt->execute(array_values($row));
+					$progress->advance(1);
+				}
+				$this->tc->commit();
+			}
+		}
+		while ($keyColumn && sizeof($rows));
 
 		$progress->finish();
 		echo("\n\n"); // CRLF after progressbar @ 100%
@@ -164,7 +184,7 @@ class BackupCommand extends AbstractCommand {
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		parent::execute($input, $output);
 
-		$this->batch = $input->getOption('batch') || self::BATCH_SIZE;
+		$this->batch = $input->getOption('batch') ?: self::BATCH_SIZE;
 
 		// make sure schemas exists
 		$sm = $this->sc->getSchemaManager();
