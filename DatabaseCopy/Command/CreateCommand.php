@@ -17,8 +17,7 @@ if (!function_exists('array_column')) {
 	/**
 	 * Simplified array_column polyfill
 	 */
-	function array_column($ary, $columnKey)
-	{
+	function array_column($ary, $columnKey)	{
 	    return array_map(create_function('&$row', 'return $row["'.$columnKey.'"];'), $ary);
 	}
 }
@@ -67,21 +66,32 @@ class CreateCommand extends AbstractCommand {
 		}
 	}
 
-	protected function renameAssets($schema, $platform) {
+	/**
+	 * Remove collations that are not supported by sqlite
+	 */
+	protected function removeCollations($table) {
+		foreach ($table->getColumns() as $column) {
+			// clear platform options if collation is set
+			if ($column->hasPlatformOption('collation')) {
+				$options = $column->getPlatformOptions();
+				unset($options['collation']);
+				$column->setPlatformOptions($options);
+			}
+		}
+	}
+
+	protected function updateSchemaForTargetPlatform($schema, $platform) {
 		$this->indexes = array();
 
-		echo("Renaming assets for target platform: " . $platform . "\n");
+		echo("Updating schema assets for target platform compatibility: " . $platform . "\n");
 
 		foreach ($schema->getTables() as $table) {
 			echo("table: " . $table->getName() . "\n");
 
-			// foreach($table->getForeignKeys() as $fk) {
-			// 	echo("fk: " . $fk->getName() . "\n");
-			// }
-
 			switch ($platform) {
 				case 'sqlite':
 					$this->renameIndexes($table);
+					$this->removeCollations($table);
 					break;
 			}
 		}
@@ -114,11 +124,6 @@ class CreateCommand extends AbstractCommand {
 		try {
 			$schema = $sm->createSchema();
 
-			// make sure schema is free of conflicts for target platform
-			if (in_array($platform = $this->tc->getDatabasePlatform()->getName(), array('sqlite'))) {
-				$this->renameAssets($schema, $platform);
-			}
-
 			echo("Creating tables\n");
 
 			// sync configured tables only
@@ -131,6 +136,11 @@ class CreateCommand extends AbstractCommand {
 						$schema->dropTable($table->getName());
 					}
 				}
+			}
+
+			// make sure schema is free of conflicts for target platform
+			if (in_array($platform = $this->tc->getDatabasePlatform()->getName(), array('sqlite'))) {
+				$this->updateSchemaForTargetPlatform($schema, $platform);
 			}
 
 			$synchronizer = new SingleDatabaseSynchronizer($this->tc);
