@@ -80,15 +80,6 @@ class BackupCommand extends AbstractCommand {
 		$sqlParameters = array();
 		$maxKey = null;
 
-		echo($table->getName() . ": copying ");
-		// count selection range
-		$sqlCount = 'SELECT COUNT(1) FROM (' . $this->sc->quoteIdentifier($table->getName()) . ')';
-		if ($keyColumn && isset($maxKey)) {
-			$sqlCount .= ' WHERE ' . $this->sc->quoteIdentifier($keyColumn) . ' > ?';
-		}
-		$totalRows = $this->sc->fetchColumn($sqlCount, $sqlParameters);
-		echo($totalRows . " rows (" . (($keyColumn) ? 'partial copy' : 'overwrite') . ")\n");
-
 		// set selection range
 		if ($keyColumn) {
 			$sqlMax = 'SELECT MAX(' . $this->tc->quoteIdentifier($keyColumn) . ') ' .
@@ -102,6 +93,15 @@ class BackupCommand extends AbstractCommand {
 			// clear target table
 			$this->truncateTable($this->tc, $table);
 		}
+
+		echo($table->getName() . ": copying ");
+		// count selection range
+		$sqlCount = 'SELECT COUNT(1) FROM (' . $this->sc->quoteIdentifier($table->getName()) . ')';
+		if ($keyColumn && isset($maxKey)) {
+			$sqlCount .= ' WHERE ' . $this->sc->quoteIdentifier($keyColumn) . ' > ?';
+		}
+		$totalRows = $this->sc->fetchColumn($sqlCount, $sqlParameters);
+		echo($totalRows . " rows (" . (($keyColumn) ? 'partial copy' : 'overwrite') . ")\n");
 
 		$progress = new ProgressBar($this->output, $totalRows);
 		$progress->setFormatDefinition('debug', ' [%bar%] %percent:3s%% %elapsed:8s%/%estimated:-8s% %current% rows');
