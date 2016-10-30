@@ -143,6 +143,10 @@ abstract class AbstractCommand extends Command {
 
 		$this->sc = \Doctrine\DBAL\DriverManager::getConnection($this->getConfig('source'));
 		$this->tc = \Doctrine\DBAL\DriverManager::getConnection($this->getConfig('target'));
+
+		// make sure all connections are UTF8
+		$this->sc->executeQuery("SET NAMES utf8");
+		$this->tc->executeQuery("SET NAMES utf8");
 	}
 }
 
