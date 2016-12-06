@@ -145,8 +145,12 @@ abstract class AbstractCommand extends Command {
 		$this->tc = \Doctrine\DBAL\DriverManager::getConnection($this->getConfig('target'));
 
 		// make sure all connections are UTF8
-		$this->sc->executeQuery("SET NAMES utf8");
-		$this->tc->executeQuery("SET NAMES utf8");
+		if ($this->sc->getDatabasePlatform()->getName() == 'mysql') {
+			$this->sc->executeQuery("SET NAMES utf8");
+		}
+		if ($this->tc->getDatabasePlatform()->getName() == 'mysql') {
+			$this->tc->executeQuery("SET NAMES utf8");
+		}
 	}
 }
 
