@@ -13,7 +13,8 @@ function includeIfExists($file) {
 // find autoloader, borrowed from github.com/behat/behat
 if ((!$loader = includeIfExists(__DIR__ . '/vendor/autoload.php')) &&
 	(!$loader = includeIfExists(__DIR__ . '/../vendor/autoload.php')) &&
-	(!$loader = includeIfExists(__DIR__ . '/../../vendor/autoload.php'))) {
+	(!$loader = includeIfExists(__DIR__ . '/../../vendor/autoload.php'))) &&
+	(!$loader = includeIfExists(__DIR__ . '/../../../vendor/autoload.php'))) {
 	fwrite(STDERR,
 		'You must set up the project dependencies, run the following commands:' . PHP_EOL .
 		'curl -s http://getcomposer.org/installer | php' . PHP_EOL .
