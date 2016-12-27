@@ -8,8 +8,8 @@
 		"email": "cpuidle@gmx.de"
 	},
 	"require": {
-		"doctrine/dbal": "~2.5",
-		"symfony/console": "~2.6"
+		"doctrine/dbal": "^2.5",
+		"symfony/console": "^2.6|^3.0"
 	},
 	"bin": ["dbcopy.php"],
 	"autoload": {
