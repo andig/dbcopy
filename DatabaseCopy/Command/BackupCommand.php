@@ -8,8 +8,8 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-
 use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Output\StreamOutput;
 
 class BackupCommand extends AbstractCommand {
 
@@ -103,7 +103,8 @@ class BackupCommand extends AbstractCommand {
 		$totalRows = $this->sc->fetchColumn($sqlCount, $sqlParameters);
 		echo($totalRows . " rows (" . (($keyColumn) ? 'partial copy' : 'overwrite') . ")\n");
 
-		$progress = new ProgressBar($this->output, $totalRows);
+		$stdout = new StreamOutput($this->output->getStream());
+		$progress = new ProgressBar($stdout, $totalRows);
 		$progress->setFormatDefinition('debug', ' [%bar%] %percent:3s%% %elapsed:8s%/%estimated:-8s% %current% rows');
 		$progress->setFormat('debug');
 
