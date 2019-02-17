@@ -28,7 +28,7 @@ abstract class AbstractCommand extends Command {
 	private static function strip($json) {
 		$json = preg_replace(array(
 			// eliminate single line comments in '// ...' form
-			'#//(.+)$#m',
+			'#//\s(.+)$#m',
 
 			// eliminate multi-line comments in '/* ... */' form
 			'#/\*.*?\*/#s'
@@ -112,34 +112,38 @@ abstract class AbstractCommand extends Command {
 		return $tables;
 	}
 
+	protected function readConfig(InputInterface $input) {
+        if (($file = $input->getOption('config')) == null) {
+            // current folder
+            $file = getcwd() . DIRECTORY_SEPARATOR . self::CONFIG_FILE;
+
+            if (!file_exists($file)) {
+                // program folder
+                $file = realpath(__DIR__) . DIRECTORY_SEPARATOR . self::CONFIG_FILE;
+            }
+        }
+
+        if (($conf = @file_get_contents($file)) === false) {
+            throw new \Exception('Config file not found: ' . $file);
+        }
+
+        if (($this->config = json_decode(self::strip($conf), true)) === null) {
+            // Errordefinitionen
+            $constants = get_defined_constants(true);
+            $json_errors = array();
+            foreach ($constants["json"] as $name => $value) {
+                if (!strncmp($name, "JSON_ERROR_", 11)) {
+                    $json_errors[$value] = $name;
+                }
+            }
+
+            throw new \Exception($json_errors[json_last_error()]);
+        }
+	}
+
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$this->output = $output;
-
-		if (($file = $input->getOption('config')) == null) {
-			// current folder
-			$file = getcwd() . DIRECTORY_SEPARATOR . self::CONFIG_FILE;
-
-			if (!file_exists($file)) {
-				// program folder
-				$file = realpath(__DIR__) . DIRECTORY_SEPARATOR . self::CONFIG_FILE;
-			}
-		}
-
-		if (($conf = @file_get_contents($file)) === false)
-			throw new \Exception('Config file not found: ' . $file);
-
-		if (($this->config = json_decode(self::strip($conf), true)) === NULL) {
-			// Errordefinitionen
-			$constants = get_defined_constants(true);
-			$json_errors = array();
-			foreach ($constants["json"] as $name => $value) {
-				if (!strncmp($name, "JSON_ERROR_", 11)) {
-					$json_errors[$value] = $name;
-				}
-			}
-
-			throw new \Exception($json_errors[json_last_error()]);
-		}
+		$this->readConfig($input);
 
 		$this->sc = \Doctrine\DBAL\DriverManager::getConnection($this->getConfig('source'));
 		$this->tc = \Doctrine\DBAL\DriverManager::getConnection($this->getConfig('target'));
