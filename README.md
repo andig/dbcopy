@@ -59,7 +59,7 @@ Command line syntax
 -------------------
 
 ```
->php dbcopy.php
+>./dbcopy
 Database backup tool
 
 Usage:
@@ -74,6 +74,7 @@ Available commands:
  create   Create target schema
  drop     Drop target schema
  help     Displays help for a command
+ influx   Copy data to InfluxDB
  list     Lists commands
 ```
 
@@ -98,6 +99,12 @@ Opposed to `clear`, the `drop` command DROPs the entire target schema if the dat
   3. Drop foreign keys on the identified tables in the *target* schema. This is necessary to allow copying of data without violating referential integrity.
   4. Copy data table by table according to configured copy mode.
   5. Re-apply foreign keys on the *target* schema (**Note:** currently not implemented for performance reasons.
+
+### Influx command
+
+The `influx` command can copy data from the Volkszaehler data table into an InfluxDB measurement. This can be helpful for using [Grafana](https://grafana.com) or [Chronograf](https://www.influxdata.com/time-series-platform/chronograf/) with Volkszaehler.
+
+With this command, the table configuration is ignored and only the data table transferred, including additional entity attributes.
 
 Limitations
 -----------

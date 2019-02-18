@@ -29,7 +29,8 @@ $app->addCommands(array(
 	new Command\BackupCommand,
 	new Command\CreateCommand,
 	new Command\DropCommand,
-	new Command\ClearCommand
+	new Command\ClearCommand,
+	new Command\InfluxBackupCommand
 ));
 
 $app->run();

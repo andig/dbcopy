@@ -16,6 +16,12 @@
 		"password": ""
 		// "dbname": "backup"
 	},
+	"influx": {
+		// influxdb target database connection
+		"dsn": "localhost:8086",
+		"dbname": "volkszaehler",
+		"measurement": "data"
+	},
 	"tables": [
 		// table configuration (optional)
 		// ------------------------------
