@@ -9,7 +9,8 @@
 	},
 	"require": {
 		"doctrine/dbal": "^2.5",
-		"symfony/console": "^4.0"
+		"symfony/console": "^4.0",
+		"influxdb/influxdb-php": "^1.14"
 	},
 	"bin": ["dbcopy.php"],
 	"autoload": {
