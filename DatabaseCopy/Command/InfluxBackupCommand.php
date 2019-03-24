@@ -152,7 +152,7 @@ EOD;
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
-        $this->readConfig($input);
+        $this->loadConfig($input);
 
 		// Doctrine PDO
         $this->sc = DoctrineDriverManager::getConnection($this->getConfig('source'));
