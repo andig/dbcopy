@@ -15,8 +15,8 @@
 	},
 	"bin": ["dbcopy"],
 	"autoload": {
-		"psr-0": {
-			"DatabaseCopy\\": "./"
+		"psr-4": {
+			"DatabaseCopy\\": "src/"
 		}
 	}
 }

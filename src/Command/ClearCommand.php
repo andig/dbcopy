@@ -41,9 +41,7 @@ class ClearCommand extends AbstractCommand {
 		// $this->dropConstraints($tm, $this->getConfig('tables'));
 		$this->tc->beginTransaction();
 
-		foreach ($this->getConfig('tables') as $workItem) {
-			$name = $workItem['name'];
-
+		foreach ($this->getConfig('tables') as $name => $mode) {
 			// check if table exists
 			if (!$this->tableExists($tm, $name)) {
 				echo($name . " doesn't exist - skipping.\n");

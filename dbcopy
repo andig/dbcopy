@@ -26,7 +26,7 @@ if ((!$loader = includeIfExists(__DIR__ . '/vendor/autoload.php')) &&
 $app = new ConsoleApplication('Database backup tool');
 
 $app->addCommands(array(
-	new Command\BackupCommand,
+	new Command\CopyCommand,
 	new Command\CreateCommand,
 	new Command\DropCommand,
 	new Command\ClearCommand,

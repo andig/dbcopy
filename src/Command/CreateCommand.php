@@ -93,6 +93,9 @@ class CreateCommand extends AbstractCommand {
 					$this->renameIndexes($table);
 					$this->removeCollations($table);
 					break;
+				case 'mysql':
+					$this->removeCollations($table);
+					break;
 			}
 		}
 	}
@@ -129,7 +132,7 @@ class CreateCommand extends AbstractCommand {
 			// sync configured tables only
 			if (($tables = $this->getOptionalConfig('tables'))) {
 				// extract target table names
-				$tables = array_column($tables, 'name');
+				$tables = array_keys($tables);
 
 				foreach ($schema->getTables() as $table) {
 					if (!in_array($table->getName(), $tables)) {
@@ -139,7 +142,9 @@ class CreateCommand extends AbstractCommand {
 			}
 
 			// make sure schema is free of conflicts for target platform
-			if (in_array($platform = $this->tc->getDatabasePlatform()->getName(), array('sqlite'))) {
+			if (($platform = $this->tc->getDatabasePlatform()->getName()) !=
+				$this->sc->getDatabasePlatform()->getName())
+			{
 				$this->updateSchemaForTargetPlatform($schema, $platform);
 			}
 
