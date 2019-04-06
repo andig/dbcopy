@@ -15,7 +15,7 @@ use InfluxDB\Point as InfluxPoint;
 use Doctrine\DBAL\DriverManager as DoctrineDriverManager;
 
 
-class InfluxBackupCommand extends AbstractCommand {
+class InfluxCommand extends AbstractCommand {
 
 	const PREC = InfluxDatabase::PRECISION_MILLISECONDS;
 	const INFLUX_READ_OPTIONS = ['epoch' => self::PREC];
@@ -98,7 +98,7 @@ EOD;
 		return $this->sc->executeQuery($entitiesSql)->fetchAll();
 	}
 
-	protected function influxLastTimestamp(array $entity): int {
+	protected function influxLastTimestamp(array $entity): float {
 		$iql = <<<EOD
 SELECT last(value)
 FROM data
@@ -108,10 +108,10 @@ EOD;
 		$res = $this->influxQuery(sprintf($iql, $entity['uuid']));
 		$timestamp = count($res) ? $res[0]['time'] : 0;
 
-		return $timestamp;
+		return (float)$timestamp;
 	}
 
-	protected function copyEntity(array $entity, int $timestamp, callable $callback = null) {
+	protected function copyEntity(array $entity, float $timestamp, callable $callback = null) {
 		$measurement = $this->getConfig('influx.measurement');
 
 		$sql = <<<EOD
@@ -132,7 +132,7 @@ EOD;
 
 			$points = [];
 			foreach ($res as $row) {
-				$timestamp = (int)$row['timestamp']; // update last timestamp
+				$timestamp = $row['timestamp']; // update last timestamp
 
 				$points[] = new InfluxPoint(
 					$measurement,
