@@ -30,7 +30,7 @@ $app->addCommands(array(
 	new Command\CreateCommand,
 	new Command\DropCommand,
 	new Command\ClearCommand,
-	new Command\InfluxBackupCommand
+	new Command\InfluxCommand
 ));
 
 $app->run();
