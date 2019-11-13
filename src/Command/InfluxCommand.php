@@ -15,6 +15,22 @@ use InfluxDB\Point as InfluxPoint;
 use Doctrine\DBAL\DriverManager as DoctrineDriverManager;
 
 
+
+/**
+ * Convert parse_url prepared array back into string
+ */
+function unparse_url($parsed) {
+	$scheme = isset($parsed['scheme']) ? $parsed['scheme'] . '://' : '';
+	$host = $parsed['host'] ?? '';
+	$port = isset($parsed['port']) ? ':' . $parsed['port'] : '';
+	$user = $parsed['user'] ?? '';
+	$pass = isset($parsed['pass']) ? ':' . $parsed['pass'] : '';
+	$pass = ($user || $pass) ? $pass . "@" : '';
+	$path = $parsed['path'] ?? '';
+
+	return $scheme . $user . $pass . $host . $port . $path;
+}
+
 class InfluxCommand extends AbstractCommand {
 
 	const PREC = InfluxDatabase::PRECISION_MILLISECONDS;
@@ -38,9 +54,15 @@ class InfluxCommand extends AbstractCommand {
 	protected function influxConnect() {
 		$dsn = $this->getConfig('influx.dsn');
 
-		if (stripos($dsn, "influxdb://") === false) {
-			$dsn = 'influxdb://' . $dsn;
-		}
+		$dsn = parse_url($dsn);
+		$dsn['scheme'] = $dsn['scheme'] ?? 'influxdb';
+
+		// merge config into parsed url
+		$dsn['user'] = $dsn['user'] ?? urlencode($this->getConfig('influx.user'));
+		$dsn['pass'] = $dsn['pass'] ?? urlencode($this->getConfig('influx.password'));
+
+		// create parsable DSN for influx connector
+		$dsn = unparse_url($dsn);
 
 		$client = InfluxClient::fromDSN($dsn);
 		$this->influxdb = $client->selectDB($this->getConfig('influx.dbname'));
