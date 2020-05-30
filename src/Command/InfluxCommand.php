@@ -215,6 +215,6 @@ EOD;
             });
             $progress->finish();
 		}
-
+		return 0;
 	}
 }
