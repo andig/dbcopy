@@ -236,5 +236,6 @@ class CopyCommand extends AbstractCommand
 		if (!$input->getOption('keep-constraints')) {
 			$this->addConstraints($tm);
 		}
+		return 0;
 	}
 }
