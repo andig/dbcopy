@@ -156,6 +156,7 @@ class CreateCommand extends AbstractCommand {
 			echo(join($sql, "\n"));
 			throw $e;
 		}
+		return 0;
 	}
 }
 

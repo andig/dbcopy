@@ -76,6 +76,7 @@ abstract class AbstractCommand extends Command {
 		if ($this->tc->getDatabasePlatform()->getName() == 'mysql') {
 			$this->tc->executeQuery("SET NAMES utf8");
 		}
+		return 0;
 	}
 }
 

@@ -61,6 +61,8 @@ class ClearCommand extends AbstractCommand {
 		}
 
 		$this->tc->commit();
+
+		return 0;
 	}
 }
 

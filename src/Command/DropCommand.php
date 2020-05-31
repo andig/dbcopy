@@ -34,6 +34,7 @@ class DropCommand extends AbstractCommand {
 		else {
 			throw new \Exception('Cannot drop undefined schema');
 		}
+		return 0;
 	}
 }
 
