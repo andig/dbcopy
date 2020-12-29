@@ -6,51 +6,53 @@ dbcopy
 Setup
 -----
 
-`dbcopy` is configured via a `dbcopy.json` config file. `dbcopy` will look for this file in the following places if not specified using the `--config` option:
+`dbcopy` is configured via a `config.yaml` config file. `dbcopy` will look for this file in the following places if not specified using the `--config` option:
 
   - current (working) directory
   - directory of `dbcopy` itself
 
 The config file has the following structure:
 
-```json
-{
-	"source": {
-		// source database connection
-		"driver": "pdo_mysql",
-		"host": "localhost",
-		"user": "travis",
-		"password": "",
-		"dbname": "volkszaehler"
-	},
-	"target": {
-		// target database connection
-		"driver": "pdo_sqlite",
-		"path": "sqlite.db3",		// path is only used if driver = pdo_sqlite
-		"host": "localhost",
-		"user": "travis",
-		"password": ""
-		// "dbname": "backup"
-	},
-	"tables": [
-		// table configuration (optional)
-		// ------------------------------
-		// table name
-		// 		tables will be processed in the order they are mentioned:
-		//		- foreign keys on target will be dropped
-		//		- if a table is not listed here, it will not be touched
-		// transfer mode
-		//		skip:		table will not be copied
-		//		copy:		entire table will be truncated on target and copied from source
-		//		pk:			selective copy by primary key. only data not present on target
-		// 						will be copied from source.
-		{
-			"name": "table_1",
-			"mode": "copy"
-		},
-		...
-	]
-}
+```yaml
+# DATABASE DEFINITION
+source:
+  driver: pdo_mysql
+  host: localhost
+  user: vz
+  password: demo
+  dbname: volkszaehler
+
+target:
+  driver: pdo_sqlite
+  host: localhost
+  user: root
+  password: raspberry
+  dbname: volkszaehler_backup
+  path: sqlite.db3		# path is only used if driver = pdo_sqlite
+
+# influxdb target database connection
+influx:
+  dsn: influxdb://localhost:8086
+  dbname: volkszaehler
+  measurement: data
+
+# TABLE DEFINITION
+# ----------------
+# tables will be processed in the order they are mentioned:
+#		- foreign keys on target will be dropped
+#		- if a table is not listed here, it will not be touched
+# transfer mode
+#		skip:		table will not be copied
+#		copy:		entire table will be truncated on target and copied from source
+#		pk:			selective copy by primary key. only data not present on target
+# 					will be copied from source.
+tables:
+  entities: copy
+  properties: copy
+  entities_in_aggregator: copy
+  data: pk
+  aggregate: skip
+
 ```
 
 The `tables` section is optional. If not configured, `dbcopy` will auto-discover all tables in the source schema.
