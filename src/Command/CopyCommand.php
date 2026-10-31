@@ -34,10 +34,14 @@ class CopyCommand extends AbstractCommand
 
 	protected function getSimplePK($table)
 	{
-		$columns = $table->getPrimaryKey()->getColumns();
+		$pk = $table->getPrimaryKey();
+		$columns = [];
+		if (!is_null($pk)) {
+			$columns = $pk->getColumns();
+		}
 
 		if (1 !== sizeof($columns)) {
-			throw new \Exception('Table '.$table->getName().' doesn\'t have a simple primary key');
+			throw new \Exception('Table '.$table->getName().' doesn\'t have a simple primary key, use copy mode!');
 		}
 
 		return $columns[0];
