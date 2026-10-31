@@ -21,7 +21,7 @@ class CopyCommand extends AbstractCommand
 	protected $batch;			// batch size
 	protected $constraints;
 
-	protected function configure()
+	protected function configure(): void
 	{
 		$this->setName('copy')
 			->setDescription('Run copy')
@@ -172,7 +172,7 @@ class CopyCommand extends AbstractCommand
 		echo "\n\n"; // CRLF after progressbar @ 100%
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output)
+	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
 		parent::execute($input, $output);
 

@@ -41,7 +41,7 @@ class InfluxCommand extends AbstractCommand {
 	protected $batch;			// batch size
 	protected $influxdb;
 
-	protected function configure() {
+	protected function configure(): void {
 		$this->setName('influx')
 			->setDescription('Copy data to InfluxDB')
 			->addOption('config', 'c', InputOption::VALUE_REQUIRED, 'Config file')
@@ -173,7 +173,7 @@ EOD;
 		} while (count($res) == $this->batch);
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
         $this->loadConfig($input);
 
 		// Doctrine PDO

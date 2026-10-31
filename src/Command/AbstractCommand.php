@@ -62,7 +62,7 @@ abstract class AbstractCommand extends Command {
 		return $tables;
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$this->output = $output;
 		$this->loadConfig($input);
 
