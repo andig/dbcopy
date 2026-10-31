@@ -121,11 +121,9 @@ EOD;
 	}
 
 	protected function influxLastTimestamp(array $entity): float {
-		$iql = <<<EOD
-SELECT last(value)
-FROM data
-WHERE uuid = '%s'
-EOD;
+		$iql = sprintf(
+			'SELECT last(value) FROM %s WHERE "uuid"=\'%%s\'',$this->getConfig('influx.measurement')
+		);
 
 		$res = $this->influxQuery(sprintf($iql, $entity['uuid']));
 		$timestamp = count($res) ? $res[0]['time'] : 0;
