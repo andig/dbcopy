@@ -26,7 +26,7 @@ class CreateCommand extends AbstractCommand {
 
 	protected $indexes;	// names assets
 
-	protected function configure() {
+	protected function configure(): void {
 		$this->setName('create')
 			->setDescription('Create target schema')
 			->addOption('config', 'c', InputOption::VALUE_REQUIRED, 'Config file');
@@ -100,7 +100,7 @@ class CreateCommand extends AbstractCommand {
 		}
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		parent::execute($input, $output);
 
 		// make sure schemas exists

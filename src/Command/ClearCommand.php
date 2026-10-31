@@ -11,7 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ClearCommand extends AbstractCommand {
 
-	protected function configure() {
+	protected function configure(): void {
 		$this->setName('clear')
 			->setDescription('Clear target tables')
 			->addOption('config', 'c', InputOption::VALUE_REQUIRED, 'Config file')
@@ -32,7 +32,7 @@ class ClearCommand extends AbstractCommand {
 		return in_array($tableName, $tables);
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		parent::execute($input, $output);
 
 		// make sure schemas exists

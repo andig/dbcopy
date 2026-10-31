@@ -11,13 +11,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class DropCommand extends AbstractCommand {
 
-	protected function configure() {
+	protected function configure(): void {
 		$this->setName('drop')
 			->setDescription('Drop target schema')
 			->addOption('config', 'c', InputOption::VALUE_REQUIRED, 'Config file');
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		parent::execute($input, $output);
 
 		// make sure schemas exists
